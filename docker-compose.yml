@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:15
+    container_name: field-work-orders-db
+    environment:
+      POSTGRES_DB: field_work_orders
+      POSTGRES_USER: fieldwork
+      POSTGRES_PASSWORD: fieldwork
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fieldwork -d field_work_orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
