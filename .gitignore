@@ -16,3 +16,11 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
