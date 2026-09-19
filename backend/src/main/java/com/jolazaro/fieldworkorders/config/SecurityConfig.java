@@ -43,6 +43,11 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                             response.getWriter().write("{\"message\":\"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter().write("{\"message\":\"Forbidden\"}");
                         }))
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
