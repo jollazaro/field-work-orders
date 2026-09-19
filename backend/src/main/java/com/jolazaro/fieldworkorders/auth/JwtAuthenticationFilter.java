@@ -10,8 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.jolazaro.fieldworkorders.user.UserRole;
-
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -47,14 +45,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-            String email = jwtService.extractEmail(token);
-            UserRole role = jwtService.extractRole(token);
+            JwtPayload payload = jwtService.parseToken(token);
             var authentication = new UsernamePasswordAuthenticationToken(
-                    email,
+                    payload.email(),
                     null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role.name())));
+                    List.of(new SimpleGrantedAuthority("ROLE_" + payload.role().name())));
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (JwtException | IllegalArgumentException ignored) {
+            // Invalid token is ignored so the request stays anonymous; Security returns 401.
             SecurityContextHolder.clearContext();
         }
 

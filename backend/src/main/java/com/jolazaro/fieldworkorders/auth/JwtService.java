@@ -41,19 +41,12 @@ public class JwtService {
                 .compact();
     }
 
-    public Claims parseClaims(String token) {
-        return Jwts.parser()
+    public JwtPayload parseToken(String token) {
+        Claims claims = Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    public String extractEmail(String token) {
-        return parseClaims(token).getSubject();
-    }
-
-    public UserRole extractRole(String token) {
-        return UserRole.valueOf(parseClaims(token).get("role", String.class));
+        return new JwtPayload(claims.getSubject(), UserRole.valueOf(claims.get("role", String.class)));
     }
 }
