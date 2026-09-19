@@ -17,6 +17,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Uploads
+uploads/
+backend/uploads/
+
 # Java / Maven
 backend/target/
 *.class
