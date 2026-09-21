@@ -21,6 +21,12 @@ Thumbs.db
 uploads/
 backend/uploads/
 
+# Frontend
+frontend/node_modules/
+frontend/www/
+frontend/.angular/
+frontend/dist/
+
 # Java / Maven
 backend/target/
 *.class

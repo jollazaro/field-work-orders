@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -72,11 +73,13 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Alta de prueba","site":"Sitio 1","instruction":"Hacer el trabajo","priority":"HIGH","assignedTechnicianId":%d}
+                                {"title":"Alta de prueba","site":"Sitio 1","instruction":"Hacer el trabajo","priority":"HIGH","assignedTechnicianId":%d,"lat":-34.6037,"lng":-58.3816}
                                 """.formatted(technicianId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.assignedTechnicianEmail").value("tecnico@demo.com"))
+                .andExpect(jsonPath("$.lat").value(-34.6037))
+                .andExpect(jsonPath("$.lng").value(-58.3816))
                 .andReturn();
 
         long id = readId(created);
@@ -85,6 +88,14 @@ class WorkOrderApiTest {
                 .andExpect(jsonPath("$.statusHistory[0].fromStatus").value(nullValue()))
                 .andExpect(jsonPath("$.statusHistory[0].toStatus").value("PENDING"))
                 .andExpect(jsonPath("$.statusHistory[0].changedByEmail").value("supervisor@demo.com"));
+
+        mockMvc.perform(post("/api/work-orders")
+                        .header("Authorization", bearer(supervisorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Sin pin","site":"Plaza","instruction":"Ubicar","priority":"NORMAL"}
+                                """))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -96,7 +107,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Libre","site":"Sitio","instruction":"Tomar","priority":"NORMAL"}
+                                {"title":"Libre","site":"Sitio","instruction":"Tomar","priority":"NORMAL","lat":-34.6037,"lng":-58.3816}
                                 """))
                 .andExpect(status().isCreated())
                 .andReturn());
@@ -207,6 +218,20 @@ class WorkOrderApiTest {
                         .content("""
                                 {"status":"DONE"}
                                 """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value("Photo is required before completing"));
+
+        mockMvc.perform(multipart("/api/work-orders/" + id + "/photo")
+                        .file(new MockMultipartFile("file", "site.png", "image/png", TINY_PNG))
+                        .header("Authorization", bearer(technicianToken)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/work-orders/" + id + "/status")
+                        .header("Authorization", bearer(technicianToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"DONE"}
+                                """))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/work-orders/" + id + "/status")
@@ -244,7 +269,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Ajena","site":"Sitio","instruction":"No ver","priority":"NORMAL","assignedTechnicianId":%d}
+                                {"title":"Ajena","site":"Sitio","instruction":"No ver","priority":"NORMAL","assignedTechnicianId":%d,"lat":-34.6037,"lng":-58.3816}
                                 """.formatted(other.getId())))
                 .andExpect(status().isCreated())
                 .andReturn());
@@ -258,7 +283,67 @@ class WorkOrderApiTest {
 
         mockMvc.perform(get("/api/work-orders").header("Authorization", bearer(technicianToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id==" + otherOrderId + ")]").isEmpty());
+                .andExpect(jsonPath("$.items[?(@.id==" + otherOrderId + ")]").isEmpty());
+    }
+
+    @Test
+    void listSupportsPaginationSortAndAccentInsensitiveSearch() throws Exception {
+        String supervisorToken = login("supervisor@demo.com");
+
+        mockMvc.perform(post("/api/work-orders")
+                        .header("Authorization", bearer(supervisorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Inspección eléctrica","site":"Córdoba Centro","instruction":"Revisión con medidor","priority":"HIGH","lat":-34.6037,"lng":-58.3816}
+                                """))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/work-orders")
+                        .param("q", "inspeccion")
+                        .param("sort", "title,asc")
+                        .param("page", "0")
+                        .param("size", "5")
+                        .header("Authorization", bearer(supervisorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].title").value("Inspección eléctrica"))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(5))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1));
+
+        mockMvc.perform(get("/api/work-orders")
+                        .param("q", "cordoba")
+                        .header("Authorization", bearer(supervisorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items[0].site").value("Córdoba Centro"));
+
+        mockMvc.perform(get("/api/work-orders")
+                        .param("sort", "unknown,desc")
+                        .header("Authorization", bearer(supervisorToken)))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/work-orders")
+                        .param("unassigned", "true")
+                        .param("size", "50")
+                        .header("Authorization", bearer(supervisorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[?(@.assignedTechnicianId!=null)]").isEmpty());
+
+        mockMvc.perform(get("/api/work-orders/export")
+                        .param("unassigned", "true")
+                        .header("Authorization", bearer(supervisorToken)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", "attachment; filename=\"ordenes.xlsx\""))
+                .andExpect(header().string("Content-Type",
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .andExpect(result -> {
+                    byte[] body = result.getResponse().getContentAsByteArray();
+                    org.assertj.core.api.Assertions.assertThat(body.length).isGreaterThan(100);
+                    // ZIP/XLSX local file header
+                    org.assertj.core.api.Assertions.assertThat(body[0]).isEqualTo((byte) 0x50);
+                    org.assertj.core.api.Assertions.assertThat(body[1]).isEqualTo((byte) 0x4B);
+                });
     }
 
     @Test
@@ -288,7 +373,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Sin tecnico","site":"Sitio","instruction":"Asignar primero","priority":"HIGH"}
+                                {"title":"Sin tecnico","site":"Sitio","instruction":"Asignar primero","priority":"HIGH","lat":-34.6037,"lng":-58.3816}
                                 """))
                 .andExpect(status().isCreated())
                 .andReturn());
@@ -311,7 +396,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(technicianToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"X","site":"Y","instruction":"Z","priority":"NORMAL"}
+                                {"title":"X","site":"Y","instruction":"Z","priority":"NORMAL","lat":-34.6037,"lng":-58.3816}
                                 """))
                 .andExpect(status().isForbidden());
 
@@ -326,7 +411,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"%s","site":"Sitio","instruction":"Hacer","priority":"NORMAL"}
+                                {"title":"%s","site":"Sitio","instruction":"Hacer","priority":"NORMAL","lat":-34.6037,"lng":-58.3816}
                                 """.formatted("x".repeat(201))))
                 .andExpect(status().isBadRequest());
     }
@@ -365,7 +450,7 @@ class WorkOrderApiTest {
                         .header("Authorization", bearer(supervisorToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"title":"Asignada","site":"Sitio","instruction":"Hacer","priority":"NORMAL","assignedTechnicianId":%d}
+                                {"title":"Asignada","site":"Sitio","instruction":"Hacer","priority":"NORMAL","assignedTechnicianId":%d,"lat":-34.6037,"lng":-58.3816}
                                 """.formatted(technicianId())))
                 .andExpect(status().isCreated())
                 .andReturn());

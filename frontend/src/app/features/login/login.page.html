@@ -1,0 +1,123 @@
+<ion-content class="login-content" [fullscreen]="true">
+  <div class="login-stage">
+    <button
+      type="button"
+      class="theme-fab"
+      [attr.aria-label]="isDark() ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'"
+      (click)="toggleTheme()"
+    >
+      <ion-icon [name]="isDark() ? 'sunny-outline' : 'moon-outline'"></ion-icon>
+    </button>
+
+    <div class="login-panel">
+      <div class="brand-block" aria-label="Órdenes">
+        <svg
+          class="brand-mark"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 40 40"
+          width="56"
+          height="56"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect width="40" height="40" rx="10" fill="#1D4ED8" />
+          <rect x="10" y="8" width="20" height="26" rx="3" fill="#FFFFFF" />
+          <rect x="14" y="5" width="12" height="6" rx="2" fill="#60A5FA" />
+          <path
+            d="M15 18.5h10M15 23.5h10M15 28.5h6"
+            fill="none"
+            stroke="#1D4ED8"
+            stroke-width="2.25"
+            stroke-linecap="round"
+          />
+          <circle cx="29" cy="29" r="7" fill="#FACC15" />
+          <path
+            d="M29 25.2v5.2l3.2 1.9"
+            fill="none"
+            stroke="#0F172A"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <p class="brand-name">Órdenes</p>
+      </div>
+
+      <p class="lead">Órdenes de trabajo en campo. Entrá para ver y gestionar el día.</p>
+
+      <app-error-banner [message]="formError()" />
+
+      @if (!showEmailForm()) {
+        <div class="role-actions">
+          <ion-button
+            expand="block"
+            class="tap-target"
+            [disabled]="submitting()"
+            (click)="enterAsSupervisor()"
+          >
+            Soy supervisor
+          </ion-button>
+          <ion-button
+            expand="block"
+            fill="outline"
+            class="tap-target"
+            [disabled]="submitting()"
+            (click)="enterAsTechnician()"
+          >
+            Soy técnico
+          </ion-button>
+          <ion-button
+            expand="block"
+            fill="clear"
+            class="email-toggle"
+            [disabled]="submitting()"
+            (click)="openEmailForm()"
+          >
+            Usar otro email
+          </ion-button>
+        </div>
+      } @else {
+        <ion-list lines="full" class="login-form">
+          <ion-item>
+            <ion-input
+              label="Email"
+              labelPlacement="stacked"
+              type="email"
+              autocomplete="username"
+              [value]="email()"
+              (ionInput)="email.set($any($event.target).value ?? '')"
+            ></ion-input>
+          </ion-item>
+          <ion-item>
+            <ion-input
+              label="Contraseña"
+              labelPlacement="stacked"
+              type="password"
+              autocomplete="current-password"
+              [value]="password()"
+              (ionInput)="password.set($any($event.target).value ?? '')"
+            ></ion-input>
+          </ion-item>
+        </ion-list>
+
+        <ion-button
+          expand="block"
+          class="tap-target"
+          [disabled]="submitting()"
+          (click)="submit()"
+        >
+          Entrar
+        </ion-button>
+        <ion-button
+          expand="block"
+          fill="clear"
+          class="email-toggle"
+          [disabled]="submitting()"
+          (click)="showEmailForm.set(false)"
+        >
+          Volver a cuentas demo
+        </ion-button>
+      }
+    </div>
+  </div>
+</ion-content>

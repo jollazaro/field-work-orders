@@ -1,0 +1,152 @@
+<ion-content class="detail-content">
+  @if (loading()) {
+    <div class="center">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (error() || !order()) {
+    <app-error-banner [message]="error() ?? 'Orden no encontrada.'" />
+    <ion-button expand="block" routerLink="/orders" class="tap-target">Volver al listado</ion-button>
+  } @else {
+    @let current = order()!;
+    @let flags = actions()!;
+    @let primary = primaryAction();
+
+    <div class="detail-body has-sticky">
+      <div class="detail-grid">
+        <section class="main">
+          <div class="title-row">
+            <h1>{{ current.title }}</h1>
+            <div class="chips">
+              <app-status-chip
+                [status]="current.status"
+                [assignedTechnicianId]="current.assignedTechnicianId"
+              />
+              <app-priority-chip [priority]="current.priority" />
+            </div>
+          </div>
+
+          <ion-text color="medium">
+            <p class="site">{{ current.site }}</p>
+            <p class="meta">Técnico: {{ technicianLabel(current) }}</p>
+          </ion-text>
+
+          <h2>Instrucción</h2>
+          <p class="instruction">{{ current.instruction }}</p>
+
+          <details class="history-fold">
+            <summary>Historial</summary>
+            <ion-list lines="none" class="history">
+              @for (event of current.statusHistory; track $index) {
+                <ion-item>
+                  <ion-label>
+                    <h3>
+                      {{ event.fromStatus ? statusLabels[event.fromStatus] : '—' }}
+                      → {{ statusLabels[event.toStatus] }}
+                    </h3>
+                    <p>{{ event.changedByEmail }} · {{ formatWhen(event.changedAt) }}</p>
+                  </ion-label>
+                </ion-item>
+              }
+            </ion-list>
+          </details>
+        </section>
+
+        <section class="evidence">
+          <h2>Foto</h2>
+          <app-photo-thumb [src]="current.photoUrl" />
+          @if (flags.canAttachEvidence) {
+            <label class="file-btn tap-target">
+              {{ current.photoUrl ? 'Reemplazar foto' : 'Adjuntar foto' }}
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                hidden
+                [disabled]="busy()"
+                (change)="onPhotoSelected($event)"
+              />
+            </label>
+            @if (!current.photoUrl) {
+              <ion-text color="medium">
+                <p class="evidence-hint">Adjuntá una foto para poder completar la orden.</p>
+              </ion-text>
+            }
+          }
+
+          <h2>Ubicación</h2>
+          @if (mapLat() === null || mapLng() === null) {
+            <ion-text color="medium">
+              <p class="coords">Sin ubicación todavía</p>
+            </ion-text>
+          } @else {
+            <ion-text color="medium">
+              <p class="coords pin-ok">Ubicación marcada</p>
+            </ion-text>
+          }
+
+          <app-location-map
+            [lat]="mapLat()"
+            [lng]="mapLng()"
+            [editable]="flags.canAttachEvidence"
+            (locationPicked)="onMapPick($event)"
+          />
+
+          @if (flags.canAttachEvidence) {
+            <ion-button
+              expand="block"
+              fill="outline"
+              class="tap-target"
+              [disabled]="busy()"
+              (click)="useGps()"
+            >
+              Usar GPS
+            </ion-button>
+          }
+        </section>
+      </div>
+    </div>
+
+    <div class="sticky-actions visible">
+      @if (flags.canAssign) {
+        <ion-item lines="none" class="assign-row">
+          <ion-select
+            interface="popover"
+            label="Asignar técnico"
+            labelPlacement="stacked"
+            [value]="assignTechnicianId()"
+            (ionChange)="assignTechnicianId.set($any($event.detail.value))"
+          >
+            @for (tech of technicians(); track tech.id) {
+              <ion-select-option [value]="tech.id">{{ techLabel(tech.email) }}</ion-select-option>
+            }
+          </ion-select>
+        </ion-item>
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="tap-target"
+          [disabled]="busy() || assignTechnicianId() == null"
+          (click)="assign()"
+        >
+          Asignar
+        </ion-button>
+      }
+
+      @if (primary; as action) {
+        <ion-button
+          expand="block"
+          class="tap-target"
+          [color]="action.color"
+          [disabled]="busy() || !!action.disabled"
+          (click)="runPrimary()"
+        >
+          {{ action.label }}
+        </ion-button>
+      }
+
+      <ion-button expand="block" fill="clear" routerLink="/orders" class="tap-target back-btn">
+        Atrás
+      </ion-button>
+    </div>
+  }
+</ion-content>

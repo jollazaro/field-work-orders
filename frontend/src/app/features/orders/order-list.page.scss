@@ -1,0 +1,224 @@
+.list-content {
+  --padding-start: 0.75rem;
+  --padding-end: 0.75rem;
+  --padding-top: 0.75rem;
+  --padding-bottom: 5rem;
+}
+
+.list-header h1 {
+  margin: 0 0 0.75rem;
+  font-size: var(--fw-title-screen, 1.75rem);
+  font-weight: 700;
+}
+
+.search {
+  padding: 0;
+  min-height: var(--fw-chip-min, 48px);
+  margin-bottom: 0.5rem;
+}
+
+.filters-fold {
+  margin-bottom: 1rem;
+  border: 2px solid var(--fw-border, var(--ion-border-color));
+  border-radius: 10px;
+  padding: 0 0.75rem;
+  background: var(--fw-surface, var(--ion-card-background, transparent));
+}
+
+.filters-fold summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--fw-chip-min, 48px);
+  font-size: var(--fw-body, 1.125rem);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.filters-fold summary::-webkit-details-marker {
+  display: none;
+}
+
+.filters-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+}
+
+.toolbar-filters {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding-bottom: 0.85rem;
+}
+
+.toolbar-filters ion-select {
+  min-height: var(--fw-chip-min, 48px);
+  font-size: var(--fw-body, 1.125rem);
+}
+
+.excel-slot {
+  display: flex;
+  align-items: flex-end;
+  grid-column: 1 / -1;
+}
+
+.excel-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: var(--fw-tap-min, 56px);
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--fw-border, var(--ion-border-color));
+  border-radius: 8px;
+  background: var(--fw-surface, transparent);
+  color: var(--fw-text, var(--ion-text-color));
+  font-family: inherit;
+  font-size: var(--fw-button, 1.125rem);
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.excel-export:hover:not(:disabled) {
+  border-color: var(--ion-color-primary);
+  color: var(--ion-color-primary);
+}
+
+.excel-export:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.excel-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  background: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.excel-export ion-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.clear-filters {
+  margin-top: 0.5rem;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 1.25rem 0 0.5rem;
+}
+
+.pager-label {
+  font-size: var(--fw-body, 1.125rem);
+  font-weight: 600;
+  color: var(--fw-text-muted, var(--ion-color-medium-shade));
+  min-width: 8rem;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .toolbar-filters {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    align-items: end;
+  }
+
+  .excel-slot {
+    grid-column: auto;
+  }
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.order-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.order-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  min-height: var(--fw-row-min, 72px);
+  padding: 1rem 1rem;
+  border: 2px solid var(--fw-border, var(--ion-color-step-150));
+  border-radius: 10px;
+  background: var(--fw-surface, var(--ion-card-background, var(--ion-background-color)));
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.card-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.card-top strong {
+  font-size: var(--fw-title-order, 1.375rem);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.chips,
+.row-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.site,
+.meta {
+  margin: 0.2rem 0 0;
+  font-size: var(--fw-body, 1.125rem);
+  color: var(--fw-text-muted, var(--ion-color-medium-shade));
+}
+
+.order-rows {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .order-cards {
+    display: none;
+  }
+
+  .order-rows {
+    display: block;
+  }
+
+  .order-rows ion-item {
+    --min-height: var(--fw-row-min, 72px);
+  }
+
+  .order-rows ion-item h2 {
+    font-size: var(--fw-title-order, 1.375rem);
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .order-rows ion-item p {
+    font-size: 1rem;
+  }
+}

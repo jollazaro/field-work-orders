@@ -31,9 +31,9 @@ Invariante: **sin técnico asignado no se pasa a En curso**, ni supervisor ni t�
 
 ## Reglas (cerradas)
 
-- **Asignación.** El supervisor puede crear una orden libre o asignarla (al crear o después, mientras esté Pendiente). El técnico ve las suyas y las libres; una libre la toma (se asigna) y **sigue Pendiente**. Nadie se autoasigna al cambiar el estado.
+- **Asignación.** El supervisor puede crear una orden libre o asignarla (al crear o después, mientras esté Pendiente). Al crear, el pin en el mapa (`lat`/`lng`) es obligatorio. El técnico ve las suyas y las libres; una libre la toma (se asigna) y **sigue Pendiente**. Nadie se autoasigna al cambiar el estado.
 - **En curso exige técnico.** `Pendiente → En curso` requiere técnico ya asignado. Si está libre → `409`. Vale para los dos roles.
-- **Foto y pin.** Solo en En curso, y solo el técnico asignado (archivo de imagen + lat/lng). En Pages, el archivo no sale del browser. En local, la API guarda el archivo en disco.
+- **Foto y pin.** Solo en En curso, y solo el técnico asignado (archivo de imagen + lat/lng). Para pasar a Completada hace falta una foto. En Pages, el archivo no sale del browser. En local, la API guarda el archivo en disco.
 - **Reopen.** Hecha → Pendiente (solo supervisor) conserva técnico, foto y pin. Queda en el historial con el email del supervisor.
 - **Historial.** El detalle lista cada cambio de estado (quién, cuándo, de → a), incluida la creación, el avance del supervisor y el reopen. No es solo `updatedAt`.
 - **Permisos.** Supervisor: alta, listado, filtro, asignar técnico, Pendiente → En curso, reopen. Técnico: no crea ni reabre; toma libres (asignarse), estado / foto / pin sobre las que puede ver. Orden existente fuera de su visibilidad → `403` con mensaje. Id inexistente → `404`.
@@ -42,7 +42,7 @@ Contrato HTTP: [API.md](API.md). Decisiones: [adr/001-work-orders-api.md](adr/00
 
 ## Datos de una orden
 
-Título, sitio (texto), instrucción, prioridad (normal/alta), estado, técnico asignado (o sin asignar), foto, lat/lng, fechas de creación y de último cambio, historial de estado.
+Título, ubicación (texto), instrucción, prioridad (normal/alta), estado, técnico asignado (o sin asignar), foto, lat/lng, fechas de creación y de último cambio, historial de estado.
 
 ## Cómo se prueba
 

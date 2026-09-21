@@ -3,6 +3,9 @@ package com.jolazaro.fieldworkorders.workorder;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,11 +36,37 @@ public class WorkOrderService {
     }
 
     @Transactional(readOnly = true)
-    public List<WorkOrderResponse> list(AppUser actor, WorkOrderStatus status, WorkOrderPriority priority) {
+    public WorkOrderListResult list(
+            AppUser actor,
+            WorkOrderStatus status,
+            WorkOrderPriority priority,
+            Boolean unassigned,
+            String q,
+            int page,
+            int size,
+            String sort) {
         boolean restrict = actor.getRole() == UserRole.TECHNICIAN;
-        return workOrderRepository.search(status, priority, restrict, restrict ? actor : null).stream()
-                .map(WorkOrderResponse::from)
-                .toList();
+        Pageable pageable = WorkOrderRepository.toPageable(page, size, sort);
+        Page<WorkOrder> result = workOrderRepository.findAll(
+                WorkOrderSpecs.list(status, priority, unassigned, restrict, restrict ? actor : null, q),
+                pageable);
+        return WorkOrderListResult.from(result);
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] exportExcel(
+            AppUser actor,
+            WorkOrderStatus status,
+            WorkOrderPriority priority,
+            Boolean unassigned,
+            String q,
+            String sort) {
+        boolean restrict = actor.getRole() == UserRole.TECHNICIAN;
+        Sort order = WorkOrderRepository.parseSort(sort);
+        List<WorkOrder> orders = workOrderRepository.findAll(
+                WorkOrderSpecs.list(status, priority, unassigned, restrict, restrict ? actor : null, q),
+                order);
+        return WorkOrderExcelExporter.toXlsx(orders);
     }
 
     public WorkOrderResponse create(AppUser actor, CreateWorkOrderRequest request) {
@@ -50,6 +79,7 @@ public class WorkOrderService {
                 request.priority(),
                 WorkOrderStatus.PENDING,
                 technician);
+        order.setLocation(request.lat(), request.lng());
         order.addStatusEvent(null, WorkOrderStatus.PENDING, actor.getEmail());
         return WorkOrderResponse.from(workOrderRepository.save(order));
     }
@@ -96,6 +126,9 @@ public class WorkOrderService {
         }
         if (target == WorkOrderStatus.IN_PROGRESS && order.getAssignedTechnician() == null) {
             throw conflict(ASSIGN_TECHNICIAN_FIRST);
+        }
+        if (target == WorkOrderStatus.DONE && !order.hasPhoto()) {
+            throw conflict("Photo is required before completing");
         }
         if (actor.getRole() == UserRole.TECHNICIAN && !isAssignedTo(order, actor)) {
             throw forbidden(NOT_ALLOWED_TO_VIEW);

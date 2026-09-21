@@ -1,0 +1,154 @@
+<ion-content class="list-content">
+  <header class="list-header">
+    <h1>{{ listTitle() }}</h1>
+  </header>
+
+  <ion-searchbar
+    class="search"
+    debounce="300"
+    placeholder="Buscar título, ubicación…"
+    [value]="searchQuery()"
+    (ionInput)="onSearchChange($any($event.detail.value))"
+    (ionClear)="onSearchChange('')"
+  ></ion-searchbar>
+
+  <details class="filters-fold">
+    <summary>
+      Filtros
+      @if (hasActiveFilters()) {
+        <span class="filters-dot" aria-hidden="true"></span>
+      }
+    </summary>
+    <div class="toolbar-filters">
+      <ion-select
+        interface="popover"
+        label="Estado"
+        labelPlacement="stacked"
+        [value]="statusFilter()"
+        (ionChange)="onStatusChange($any($event.detail.value))"
+      >
+        <ion-select-option value="">Todos</ion-select-option>
+        <ion-select-option [value]="unassignedFilter">{{ unassignedLabel }}</ion-select-option>
+        @for (s of statuses; track s) {
+          <ion-select-option [value]="s">{{ statusLabels[s] }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        interface="popover"
+        label="Prioridad"
+        labelPlacement="stacked"
+        [value]="priorityFilter()"
+        (ionChange)="onPriorityChange($any($event.detail.value))"
+      >
+        <ion-select-option value="">Todas</ion-select-option>
+        @for (p of priorities; track p) {
+          <ion-select-option [value]="p">{{ priorityLabels[p] }}</ion-select-option>
+        }
+      </ion-select>
+
+      <ion-select
+        interface="popover"
+        label="Orden"
+        labelPlacement="stacked"
+        [value]="sort()"
+        (ionChange)="onSortChange($any($event.detail.value))"
+      >
+        @for (opt of sortOptions; track opt.value) {
+          <ion-select-option [value]="opt.value">{{ opt.label }}</ion-select-option>
+        }
+      </ion-select>
+
+      <div class="excel-slot">
+        <button
+          type="button"
+          class="excel-export tap-target"
+          [disabled]="exporting() || loading()"
+          (click)="exportExcel()"
+          aria-label="Descargar órdenes en Excel"
+        >
+          @if (exporting()) {
+            <ion-spinner name="crescent"></ion-spinner>
+          } @else {
+            <span class="excel-mark" aria-hidden="true">X</span>
+          }
+          <span class="excel-label">Excel</span>
+        </button>
+      </div>
+    </div>
+  </details>
+
+  <app-error-banner [message]="error()" />
+
+  @if (loading()) {
+    <div class="center">
+      <ion-spinner name="crescent"></ion-spinner>
+    </div>
+  } @else if (orders().length === 0) {
+    <app-empty-state message="No hay órdenes con estos filtros." />
+    @if (hasActiveFilters()) {
+      <ion-button expand="block" fill="outline" class="tap-target clear-filters" (click)="clearFilters()">
+        Limpiar filtros
+      </ion-button>
+    }
+  } @else {
+    <!-- Mobile: cards -->
+    <div class="order-cards">
+      @for (order of orders(); track order.id) {
+        <button type="button" class="order-card tap-target" (click)="openDetail(order.id)">
+          <div class="card-top">
+            <strong>{{ order.title }}</strong>
+            <div class="chips">
+              <app-status-chip
+                [status]="order.status"
+                [assignedTechnicianId]="order.assignedTechnicianId"
+              />
+              <app-priority-chip [priority]="order.priority" />
+            </div>
+          </div>
+          <ion-text color="medium">
+            <p class="site">{{ order.site }}</p>
+            <p class="meta">{{ technicianLabel(order) }}</p>
+          </ion-text>
+        </button>
+      }
+    </div>
+
+    <!-- Desktop md+: dense rows -->
+    <ion-list class="order-rows" lines="full">
+      @for (order of orders(); track order.id) {
+        <ion-item button detail="true" class="tap-target" (click)="openDetail(order.id)">
+          <ion-label>
+            <h2>{{ order.title }}</h2>
+            <p>{{ order.site }} · {{ technicianLabel(order) }}</p>
+          </ion-label>
+          <div slot="end" class="row-chips">
+            <app-status-chip
+              [status]="order.status"
+              [assignedTechnicianId]="order.assignedTechnicianId"
+            />
+            <app-priority-chip [priority]="order.priority" />
+          </div>
+        </ion-item>
+      }
+    </ion-list>
+
+    <div class="pager">
+      <ion-button fill="outline" [disabled]="!canGoPrev()" (click)="goPrev()" aria-label="Página anterior">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <span class="pager-label">{{ pageLabel() }}</span>
+      <ion-button fill="outline" [disabled]="!canGoNext()" (click)="goNext()" aria-label="Página siguiente">
+        <ion-icon slot="icon-only" name="chevron-forward-outline"></ion-icon>
+      </ion-button>
+    </div>
+  }
+
+  @if (canCreate()) {
+    <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+      <ion-fab-button routerLink="/orders/new" aria-label="Nueva orden">
+        <ion-icon name="add-outline"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
+  }
+</ion-content>

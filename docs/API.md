@@ -80,10 +80,44 @@ Lo anterior más:
 
 ### `GET /api/work-orders`
 
-Query opcional: `status`, `priority`. Orden: `updatedAt` desc.
+Query opcional:
+
+| Param | Default | Notas |
+|---|---|---|
+| `status` | — | Exact enum |
+| `priority` | — | Exact enum |
+| `unassigned` | — | `true` = sin técnico; `false` = con técnico |
+| `q` | — | Búsqueda parcial case/accent-insensitive en `title`, `site`, `instruction`, email del técnico |
+| `page` | `0` | 0-based |
+| `size` | `10` | Máx. 50 |
+| `sort` | `updatedAt,desc` | `campo,asc\|desc`. Campos: `updatedAt`, `createdAt`, `title`, `site`, `status`, `priority` |
+
+Respuesta:
+
+```json
+{
+  "items": [ /* WorkOrder */ ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 3,
+  "totalPages": 1
+}
+```
 
 - Supervisor: todas.
 - Técnico: asignadas a él **o** sin asignar.
+
+### `GET /api/geocode?q=`
+
+Proxy autenticado a **Nominatim** (OpenStreetMap, gratis, uso razonable). Busca en toda Argentina (`countrycodes=ar`).
+
+`200` `{ "lat", "lng", "displayName" }`. `404` si no hay coincidencia.
+
+### `GET /api/work-orders/export`
+
+Mismos filtros que la lista (`status`, `priority`, `unassigned`, `q`, `sort`). **Sin paginación**: exporta todas las filas visibles para el actor.
+
+Respuesta: archivo `.xlsx` (`Content-Disposition: attachment; filename="ordenes.xlsx"`).
 
 ### `POST /api/work-orders`
 
@@ -95,11 +129,13 @@ Solo supervisor. `201`.
   "site": "Av. Colón 1200",
   "instruction": "Reemplazar medidor y dejar foto del número nuevo.",
   "priority": "HIGH",
-  "assignedTechnicianId": 2
+  "assignedTechnicianId": 2,
+  "lat": -31.4201,
+  "lng": -64.1888
 }
 ```
 
-`title`, `site`, `instruction`: required, no blank. `priority`: required. `assignedTechnicianId`: opcional; si viene, debe ser un `TECHNICIAN`. Estado inicial siempre `PENDING`. Crea el primer evento de historial.
+`title`, `site`, `instruction`: required, no blank. `priority`: required. `assignedTechnicianId`: opcional; si viene, debe ser un `TECHNICIAN`. `lat` / `lng`: **obligatorios** (mismos rangos que location). Estado inicial siempre `PENDING`. Crea el primer evento de historial.
 
 ### `GET /api/work-orders/{id}`
 
@@ -134,11 +170,11 @@ Precondición de `IN_PROGRESS`: `assignedTechnicianId` no null. Si falta → `40
 | Actor | Transición | Extra |
 |---|---|---|
 | Técnico | `PENDING` → `IN_PROGRESS` | Solo si está asignada a él |
-| Técnico | `IN_PROGRESS` → `DONE` | Solo si está asignada a él |
+| Técnico | `IN_PROGRESS` → `DONE` | Solo si está asignada a él **y** tiene foto |
 | Supervisor | `PENDING` → `IN_PROGRESS` | Solo si ya hay técnico |
 | Supervisor | `DONE` → `PENDING` | Conserva técnico, foto y pin |
 
-Toda transición (y la creación) agrega un evento a `statusHistory` con `changedByEmail` del actor. Cualquier otra combinación → `409`. El técnico no reabre. El supervisor no marca `DONE`. Foto y pin no cambian en un cambio de estado.
+Toda transición (y la creación) agrega un evento a `statusHistory` con `changedByEmail` del actor. Cualquier otra combinación → `409`. Completar sin foto → `409` `"Photo is required before completing"`. El técnico no reabre. El supervisor no marca `DONE`. Foto y pin no cambian en un cambio de estado.
 
 ### `POST /api/work-orders/{id}/photo`
 

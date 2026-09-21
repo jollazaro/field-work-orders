@@ -1,0 +1,138 @@
+<ion-content class="create-content">
+  <h1>Nueva orden</h1>
+  <ion-text color="medium">
+    <p class="lead">Completá los datos. La orden arranca en Pendiente.</p>
+  </ion-text>
+
+  <ion-list lines="full" class="form">
+    <ion-item>
+      <ion-input
+        label="Título *"
+        labelPlacement="stacked"
+        maxlength="200"
+        [value]="title()"
+        (ionInput)="title.set($any($event.target).value ?? '')"
+      ></ion-input>
+    </ion-item>
+    @if (titleError()) {
+      <app-error-banner [message]="titleError()" />
+    }
+
+    <ion-item>
+      <ion-input
+        label="Ubicación *"
+        labelPlacement="stacked"
+        maxlength="200"
+        placeholder="Ej: Av. Eva Perón 7880, Loma Hermosa, Buenos Aires"
+        [value]="site()"
+        (ionInput)="site.set($any($event.target).value ?? '')"
+        (keyup.enter)="searchOnMap()"
+      ></ion-input>
+    </ion-item>
+    @if (siteError()) {
+      <app-error-banner [message]="siteError()" />
+    }
+
+    <div class="map-block">
+      <div class="map-toolbar">
+        <p class="map-hint">Pin en el mapa *</p>
+        <ion-button
+          fill="outline"
+          class="geocode-btn tap-target"
+          [disabled]="geocoding() || submitting()"
+          (click)="searchOnMap()"
+        >
+          @if (geocoding()) {
+            <ion-spinner name="crescent" slot="start"></ion-spinner>
+          }
+          Buscar en mapa
+        </ion-button>
+      </div>
+      <app-location-map
+        [lat]="lat()"
+        [lng]="lng()"
+        [editable]="true"
+        ariaLabel="Elegir ubicación en el mapa"
+        (locationPicked)="onMapPick($event)"
+      />
+      @if (lat() != null && lng() != null) {
+        <div class="pin-meta">
+          <ion-text>
+            <p class="pin-ok">Ubicación marcada</p>
+          </ion-text>
+          <ion-button fill="clear" class="clear-pin" (click)="clearPin()">Quitar pin</ion-button>
+        </div>
+      }
+      @if (locationError()) {
+        <app-error-banner [message]="locationError()" />
+      }
+    </div>
+
+    <ion-item>
+      <ion-textarea
+        label="Instrucción *"
+        labelPlacement="stacked"
+        autoGrow="true"
+        maxlength="2000"
+        [value]="instruction()"
+        (ionInput)="instruction.set($any($event.target).value ?? '')"
+      ></ion-textarea>
+    </ion-item>
+    @if (instructionError()) {
+      <app-error-banner [message]="instructionError()" />
+    }
+
+    <ion-item>
+      <ion-select
+        interface="popover"
+        label="Prioridad *"
+        labelPlacement="stacked"
+        [value]="priority()"
+        (ionChange)="priority.set($any($event.detail.value))"
+      >
+        @for (p of priorities; track p) {
+          <ion-select-option [value]="p">{{ priorityLabels[p] }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      @if (loadingTechs()) {
+        <ion-spinner name="crescent"></ion-spinner>
+      } @else {
+        <ion-select
+          interface="popover"
+          label="Técnico (opcional)"
+          labelPlacement="stacked"
+          [value]="technicianId()"
+          (ionChange)="onTechnicianChange($event.detail.value)"
+        >
+          <ion-select-option value="">Sin asignar</ion-select-option>
+          @for (tech of technicians(); track tech.id) {
+            <ion-select-option [value]="tech.id">{{ techLabel(tech.email) }}</ion-select-option>
+          }
+        </ion-select>
+      }
+    </ion-item>
+  </ion-list>
+
+  <div class="actions">
+    <ion-button
+      expand="block"
+      class="tap-target"
+      [disabled]="submitting()"
+      (click)="submit()"
+    >
+      Crear orden
+    </ion-button>
+    <ion-button
+      expand="block"
+      fill="outline"
+      class="tap-target"
+      [disabled]="submitting()"
+      (click)="cancel()"
+    >
+      Cancelar
+    </ion-button>
+  </div>
+</ion-content>

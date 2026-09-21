@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" role="img" aria-label="Órdenes">
+  <!-- Work-order mark: clipboard + checklist (field ops) -->
+  <rect width="40" height="40" rx="10" fill="#1D4ED8"/>
+  <rect x="10" y="8" width="20" height="26" rx="3" fill="#FFFFFF"/>
+  <rect x="14" y="5" width="12" height="6" rx="2" fill="#60A5FA"/>
+  <path
+    d="M15 18.5h10M15 23.5h10M15 28.5h6"
+    fill="none"
+    stroke="#1D4ED8"
+    stroke-width="2.25"
+    stroke-linecap="round"
+  />
+  <circle cx="29" cy="29" r="7" fill="#FACC15"/>
+  <path
+    d="M29 25.2v5.2l3.2 1.9"
+    fill="none"
+    stroke="#0F172A"
+    stroke-width="1.75"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

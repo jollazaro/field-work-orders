@@ -1,8 +1,8 @@
 package com.jolazaro.fieldworkorders.workorder;
 
 import java.io.IOException;
-import java.util.List;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -35,10 +35,32 @@ public class WorkOrderController {
     }
 
     @GetMapping
-    public List<WorkOrderResponse> list(
+    public WorkOrderListResult list(
             @RequestParam(required = false) WorkOrderStatus status,
-            @RequestParam(required = false) WorkOrderPriority priority) {
-        return workOrderService.list(currentUserService.requireUser(), status, priority);
+            @RequestParam(required = false) WorkOrderPriority priority,
+            @RequestParam(required = false) Boolean unassigned,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "updatedAt,desc") String sort) {
+        return workOrderService.list(
+                currentUserService.requireUser(), status, priority, unassigned, q, page, size, sort);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportExcel(
+            @RequestParam(required = false) WorkOrderStatus status,
+            @RequestParam(required = false) WorkOrderPriority priority,
+            @RequestParam(required = false) Boolean unassigned,
+            @RequestParam(required = false) String q,
+            @RequestParam(defaultValue = "updatedAt,desc") String sort) {
+        byte[] body = workOrderService.exportExcel(
+                currentUserService.requireUser(), status, priority, unassigned, q, sort);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"ordenes.xlsx\"")
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(body);
     }
 
     @PostMapping

@@ -1,0 +1,170 @@
+.detail-content {
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 1rem;
+  --padding-bottom: 0;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.detail-body.has-sticky {
+  padding-bottom: 11rem;
+}
+
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+h1 {
+  margin: 0;
+  font-size: var(--fw-title-screen, 1.75rem);
+  font-weight: 700;
+  flex: 1 1 12rem;
+  line-height: 1.25;
+}
+
+h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-size: var(--fw-title-order, 1.375rem);
+  font-weight: 700;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.site,
+.meta,
+.coords {
+  margin: 0.25rem 0 0;
+  font-size: var(--fw-body, 1.125rem);
+  color: var(--fw-text-muted, var(--ion-color-medium-shade));
+}
+
+.coords.pin-ok {
+  font-weight: 600;
+  color: var(--fw-text, var(--ion-text-color));
+}
+
+.evidence-hint {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.instruction {
+  margin: 0;
+  white-space: pre-wrap;
+  font-size: var(--fw-body, 1.125rem);
+  line-height: 1.45;
+}
+
+.history-fold {
+  margin-top: 1.25rem;
+  border: 2px solid var(--fw-border, var(--ion-border-color));
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+}
+
+.history-fold summary {
+  font-size: var(--fw-body, 1.125rem);
+  font-weight: 700;
+  min-height: var(--fw-chip-min, 48px);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.history {
+  background: transparent;
+  margin: 0.5rem 0 0;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+}
+
+.sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0 -1rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--fw-surface, var(--ion-background-color)) 92%, transparent);
+  border-top: 2px solid var(--fw-border, var(--ion-border-color));
+  backdrop-filter: blur(8px);
+}
+
+.sticky-actions.visible {
+  display: flex;
+}
+
+.assign-row {
+  --padding-start: 0;
+  --inner-padding-end: 0;
+  --background: transparent;
+}
+
+.back-btn {
+  margin-top: 0.15rem;
+}
+
+.file-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.75rem;
+  min-height: var(--fw-tap-min, 56px);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 2px solid var(--ion-color-primary);
+  background: transparent;
+  color: var(--ion-color-primary);
+  font-size: var(--fw-button, 1.125rem);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.file-btn:has(input:disabled) {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+@media (min-width: 992px) {
+  .detail-body.has-sticky {
+    padding-bottom: 2rem;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .sticky-actions {
+    position: static;
+    margin: 1rem 0 0;
+    max-width: 28rem;
+    border-top: none;
+    padding: 0;
+    background: transparent;
+    backdrop-filter: none;
+  }
+}
